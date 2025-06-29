@@ -1,14 +1,22 @@
 import React from 'react';
-import { GraduationCap, Moon, Sun } from 'lucide-react';
+import { GraduationCap, Moon, Sun, LogOut, User } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   studentCount: number;
+  currentUser?: { name: string; email: string } | null;
+  onLogout?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, studentCount }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  activeTab, 
+  setActiveTab, 
+  studentCount, 
+  currentUser,
+  onLogout 
+}) => {
   const { isDark, toggleTheme } = useTheme();
 
   const tabs = [
@@ -35,17 +43,51 @@ const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, studentCount }
             </div>
           </div>
           
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isDark ? (
-              <Sun className="h-5 w-5 text-yellow-500" />
-            ) : (
-              <Moon className="h-5 w-5 text-gray-600" />
+          <div className="flex items-center space-x-4">
+            {/* User Info */}
+            {currentUser && (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {currentUser.name}
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {currentUser.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-gray-600" />
+              )}
+            </button>
+
+            {/* Logout Button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2 rounded-lg bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors text-red-600 dark:text-red-400"
+                aria-label="Logout"
+                title="Logout"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </div>
         
         <nav className="flex space-x-1 overflow-x-auto pb-4">

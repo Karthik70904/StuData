@@ -1,14 +1,16 @@
 import React from 'react';
-import { Download, FileText, Database } from 'lucide-react';
+import { Download, FileText, Database, Shield } from 'lucide-react';
 import { Student } from '../types/Student';
+import { User } from '../types/Auth';
 import { exportToJSON, exportToCSV } from '../utils/export';
 
 interface ExportProps {
   students: Student[];
   onShowToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
+  currentUser?: User | null;
 }
 
-const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
+const Export: React.FC<ExportProps> = ({ students, onShowToast, currentUser }) => {
   const handleJSONExport = () => {
     if (students.length === 0) {
       onShowToast('No students to export', 'warning');
@@ -39,7 +41,7 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
 
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !currentUser) return;
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -51,18 +53,20 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
           // Validate the structure
           const firstItem = importedData[0];
           if (firstItem && typeof firstItem === 'object' && 'name' in firstItem) {
-            const existingData = localStorage.getItem('studata_students');
+            const storageKey = `studata_students_${currentUser.id}`;
+            const existingData = localStorage.getItem(storageKey);
             const currentStudents = existingData ? JSON.parse(existingData) : [];
             
-            // Merge and update storage
+            // Merge and update storage with user association
             const mergedData = [...currentStudents, ...importedData.map(item => ({
               ...item,
               id: item.id || Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              userId: currentUser.id, // Associate with current user
               createdAt: item.createdAt || new Date().toISOString(),
               updatedAt: item.updatedAt || new Date().toISOString(),
             }))];
             
-            localStorage.setItem('studata_students', JSON.stringify(mergedData));
+            localStorage.setItem(storageKey, JSON.stringify(mergedData));
             onShowToast(`Successfully imported ${importedData.length} students`, 'success');
             
             // Reload the page to refresh the data
@@ -84,7 +88,19 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Export & Import Data</h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Export & Import Data</h2>
+          {currentUser && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+              <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Your Data Only
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Export Section */}
@@ -117,6 +133,7 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
               <li>• JSON format preserves all data structure</li>
               <li>• CSV format is compatible with Excel</li>
               <li>• Files are downloaded to your device</li>
+              <li>• Only your personal student data is exported</li>
               <li>• No data is sent to external servers</li>
             </ul>
           </div>
@@ -145,7 +162,8 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
             <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">Import Info</h4>
             <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
               <li>• Only JSON format is supported for import</li>
-              <li>• Data will be merged with existing records</li>
+              <li>• Data will be merged with your existing records</li>
+              <li>• Imported data will be associated with your account</li>
               <li>• Duplicate records may be created</li>
               <li>• Page will refresh after successful import</li>
             </ul>
@@ -155,7 +173,14 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
 
       {/* Data Summary */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Current Data Summary</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Your Data Summary
+          {currentUser && (
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+              (User: {currentUser.name})
+            </span>
+          )}
+        </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -165,21 +190,21 @@ const Export: React.FC<ExportProps> = ({ students, onShowToast }) => {
           
           <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {[...new Set(students.map(s => s.subject))].length}
+              {[...new Set(students.map(s => s.class))].length}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Subjects</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Classes</p>
           </div>
           
           <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              ₹{students.reduce((sum, s) => sum + s.fee, 0).toLocaleString()}
+              {[...new Set(students.map(s => s.habitation))].length}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total Fees</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Habitations</p>
           </div>
           
           <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {Math.round(localStorage.getItem('studata_students')?.length || 0 / 1024)}KB
+              {currentUser ? Math.round((localStorage.getItem(`studata_students_${currentUser.id}`)?.length || 0) / 1024) : 0}KB
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">Storage Used</p>
           </div>

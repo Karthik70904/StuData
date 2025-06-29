@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Search, Edit, Trash2, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Search, Edit, Trash2, ChevronDown, ChevronUp, Filter, Shield } from 'lucide-react';
 import { Student } from '../types/Student';
+import { User } from '../types/Auth';
 
 interface StudentListProps {
   students: Student[];
   onEdit: (student: Student) => void;
   onDelete: (id: string) => void;
+  currentUser?: User | null;
 }
 
-const StudentList: React.FC<StudentListProps> = ({ students, onEdit, onDelete }) => {
+const StudentList: React.FC<StudentListProps> = ({ students, onEdit, onDelete, currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterClass, setFilterClass] = useState('');
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
@@ -41,6 +43,23 @@ const StudentList: React.FC<StudentListProps> = ({ students, onEdit, onDelete })
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Your Students</h2>
+          {currentUser && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+              <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Private Data
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          {filteredStudents.length} of {students.length} students
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -255,6 +274,9 @@ const StudentList: React.FC<StudentListProps> = ({ students, onEdit, onDelete })
           <div className="text-center py-12">
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">No students found</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              {searchTerm || filterClass ? 'Try adjusting your search or filter' : 'Start by adding your first student'}
+            </p>
           </div>
         )}
       </div>

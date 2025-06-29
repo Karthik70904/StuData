@@ -1,12 +1,14 @@
 import React from 'react';
-import { Users, GraduationCap, DollarSign, Calendar } from 'lucide-react';
+import { Users, GraduationCap, DollarSign, Calendar, UserCheck } from 'lucide-react';
 import { Student } from '../types/Student';
+import { User } from '../types/Auth';
 
 interface DashboardProps {
   students: Student[];
+  currentUser?: User | null;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ students }) => {
+const Dashboard: React.FC<DashboardProps> = ({ students, currentUser }) => {
   const totalStudents = students.length;
   const maleStudents = students.filter(s => s.gender === 'Male').length;
   const femaleStudents = students.filter(s => s.gender === 'Female').length;
@@ -49,6 +51,23 @@ const Dashboard: React.FC<DashboardProps> = ({ students }) => {
 
   return (
     <div className="space-y-6">
+      {/* User Welcome */}
+      {currentUser && (
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              <UserCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Welcome back, {currentUser.name}!</h2>
+              <p className="text-blue-100">
+                You have {totalStudents} student{totalStudents !== 1 ? 's' : ''} in your database
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
@@ -78,6 +97,11 @@ const Dashboard: React.FC<DashboardProps> = ({ students }) => {
         <div className="flex items-center gap-3 mb-6">
           <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Additions</h2>
+          {currentUser && (
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              (Your students only)
+            </span>
+          )}
         </div>
         
         {recentStudents.length > 0 ? (
@@ -85,7 +109,7 @@ const Dashboard: React.FC<DashboardProps> = ({ students }) => {
             {recentStudents.map((student) => (
               <div
                 key={student.id}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
               >
                 <div className="flex items-center space-x-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
@@ -113,6 +137,9 @@ const Dashboard: React.FC<DashboardProps> = ({ students }) => {
           <div className="text-center py-8">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">No students added yet</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              Start by adding your first student!
+            </p>
           </div>
         )}
       </div>

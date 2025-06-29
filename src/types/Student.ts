@@ -1,5 +1,6 @@
 export interface Student {
   id: string;
+  userId: string; // Associate student with user
   name: string;
   gender: 'Male' | 'Female' | 'Other';
   caste: 'SC' | 'ST' | 'BC' | 'OC';
@@ -30,4 +31,4 @@ export interface Student {
   updatedAt: string;
 }
 
-export interface StudentFormData extends Omit<Student, 'id' | 'createdAt' | 'updatedAt'> {}
+export interface StudentFormData extends Omit<Student, 'id' | 'userId' | 'createdAt' | 'updatedAt'> {}
